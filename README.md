@@ -7,7 +7,7 @@ Claude Code のセッション間でコンテクストを引き継ぐための4�
 | `/checkpoint` | セッション内チェックポイントを保存（`/compact` 前に推奨） |
 | `/handoff` | セッション終了時の引き継ぎドキュメント生成 |
 | `/resume` | 前セッションの引き継ぎを読み込みコンテクスト復元 |
-| `/migrate` | checkpoint → handoff → 新セッション起動 → resume を一括実行 |
+| `/migrate` | handoff → 新セッション起動 → resume を一括実行 |
 
 ## ワークフロー
 
@@ -15,7 +15,7 @@ Claude Code のセッション間でコンテクストを引き継ぐための4�
 セッション内:  作業 → /checkpoint → /compact → 作業続行
 セッション終了: /handoff → 終了
 次セッション:   /resume → コンテクスト復元 → 作業続行
-ワンコマンド:   /migrate → 全自動で新セッションに移行
+ワンコマンド:   /migrate → handoff + 新セッション起動 + resume を一括実行
 ```
 
 ## 導入方法
@@ -58,7 +58,7 @@ rm -rf /tmp/Claude-Code-MIGRATE-Command
 | `/checkpoint` | セッション内チェックポイントを保存（compact前に推奨） |
 | `/handoff` | セッション終了時の引き継ぎドキュメント生成 |
 | `/resume` | 前セッションの引き継ぎを読み込み |
-| `/migrate` | 新セッションへ移行（checkpoint→handoff→resume を一括） |
+| `/migrate` | 新セッションへ移行（handoff→resume を一括） |
 ```
 
 ## 各コマンドの説明
@@ -99,17 +99,16 @@ rm -rf /tmp/Claude-Code-MIGRATE-Command
 2. MEMORY.md に `Pending Resume` マーカーがある場合 → 記載された handoff パスを使用
 3. 自動検出 → `~/.claude/sessions/{slug}/` から最新の handoff（なければ checkpoint）を検索
 
-復元後、Related Files に記載された上位3件のファイルも先行読み込みされます。
+Related Files はパス一覧として表示され、必要時に都度 Read する lazy loading 方式です。
 
 ### `/migrate` — ワンコマンドで新セッションに移行
 
-checkpoint → handoff → 新セッション起動 → 自動 resume を一括実行します。コンテクストウィンドウが飽和してきたとき、1コマンドで新セッションに移行できます。
+handoff → 新セッション起動 → 自動 resume を一括実行します。コンテクストウィンドウが飽和してきたとき、1コマンドで新セッションに移行できます。
 
 **実行される処理:**
-1. Checkpoint ファイルの作成
-2. Handoff ファイルの作成
-3. MEMORY.md に Pending Resume マーカーを追記
-4. 新しい Terminal タブで `claude '/resume'` を起動
+1. Handoff ファイルの作成
+2. MEMORY.md に Pending Resume マーカーを追記
+3. 新しい Terminal タブで `claude '/resume'` を起動
 
 > **Note:** 新セッションの自動起動は macOS の Terminal.app を前提としています。iTerm2 や他のターミナル、Linux / Windows (WSL) の場合は手動で新ターミナルを開き `claude '/resume'` を実行してください。MEMORY.md の Pending Resume マーカーにより、handoff ファイルは自動検出されます。
 
@@ -143,7 +142,7 @@ $PROJECT_ROOT からホームディレクトリを除去し、/ を - に置換
 
 - Checkpoint: 目標 2KB / 上限 4KB
 - Handoff: 目標 3KB / 上限 6KB
-- `/resume` で復元時の消費: handoff + Related Files の先行読み込み分
+- `/resume` で復元時の消費: handoff 本体の ~750 tokens のみ（Related Files は lazy loading）
 
 ## 設計思想
 

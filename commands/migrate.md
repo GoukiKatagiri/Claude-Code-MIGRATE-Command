@@ -1,9 +1,9 @@
 ---
-description: コンテクスト長の回避のため新セッションへ移行（checkpoint→handoff→resume を一括実行）
+description: コンテクスト長の回避のため新セッションへ移行（handoff→resume を一括実行）
 allowed-tools: Read, Write, Bash, Glob
 ---
 
-コンテクストウィンドウの飽和を回避するため、現在のセッションのコンテクストを外部化し、新しいセッションに移行してください。checkpoint → handoff → 新セッション起動 → 自動 resume を一括で実行します。
+コンテクストウィンドウの飽和を回避するため、現在のセッションのコンテクストを外部化し、新しいセッションに移行してください。handoff → 新セッション起動 → 自動 resume を一括で実行します。
 
 ## 1. プロジェクトの特定
 
@@ -36,55 +36,9 @@ date "+%Y%m%d-%H%M"
 
 以降、この値を `$TS` とする。
 
-## 4. Checkpoint の作成
+## 4. Handoff の作成
 
-会話の全履歴を振り返り、以下の内容でチェックポイントファイルを生成する。
-
-保存先: `~/.claude/sessions/$SLUG/checkpoint-$TS.md`
-
-```markdown
-# Checkpoint: {フェーズ名 or 自動要約}
-
-- **Project**: {プロジェクト名}
-- **Directory**: {$PROJECT_ROOT}
-- **Timestamp**: {YYYY-MM-DD HH:MM}
-
-## Objective
-
-セッションの目的を1-2文で記述。
-
-## Completed
-
-- 完了タスク一覧
-
-## In Progress
-
-- 進行中タスク — 現在の状態
-
-## Pending
-
-- 未着手タスク一覧
-
-## Key Decisions
-
-- **判断内容**: 理由の説明
-
-## Changed Files（コード変更ありの場合）
-
-- `path/to/file` — 変更内容の説明
-
-## Key Artifacts（コード変更なしの場合、Changed Files の代わりに使用）
-
-- 作成・参照したファイル、ノート、URL、成果物の一覧と説明
-```
-
-> **適応ルール**: git diff/status が空かつソースファイルの編集がない場合は「コード変更なし」と判定し、Changed Files の代わりに Key Artifacts を使用する。
-
-サイズ目標: 2KB、上限: 4KB
-
-## 5. Handoff の作成
-
-チェックポイントと会話全履歴を基に、引き継ぎドキュメントを生成する。
+会話の全履歴を振り返り、引き継ぎドキュメントを生成する。
 
 git リポジトリの場合、追加情報を収集:
 
@@ -141,11 +95,11 @@ git log --oneline -10
 2. `path/to/file2` — 理由
 ```
 
-> **適応ルール**: Checkpoint と同様、git diff/status が空かつソースファイルの編集がない場合は「コード変更なし」と判定。Current State は進捗状況を、Architecture Notes は Background Knowledge に差し替える。
+> **適応ルール**: git diff/status が空かつソースファイルの編集がない場合は「コード変更なし」と判定。Current State は進捗状況を、Architecture Notes は Background Knowledge に差し替える。
 
 サイズ目標: 3KB、上限: 6KB
 
-## 6. MEMORY.md にマーカーを追記
+## 5. MEMORY.md にマーカーを追記
 
 **MEMORY.md パスの特定**:
 
@@ -167,7 +121,7 @@ echo "$(pwd | tr '/' '-')"
 
 このマーカーは `/resume` 実行時に自動削除される安全策。
 
-## 7. 新 Terminal タブの起動
+## 6. 新 Terminal タブの起動
 
 > **注意**: このステップは macOS の Terminal.app を前提としています。iTerm2 や他のターミナルを使用している場合は、AppleScript 部分を適宜調整してください。Linux / Windows (WSL) の場合はステップ8のフォールバック手順を参照してください。
 
@@ -180,14 +134,13 @@ osascript -e "tell application \"Terminal\"" \
   -e "end tell"
 ```
 
-## 8. 完了報告
+## 7. 完了報告
 
 以下を表示する:
 
 ```
 ## セッション移行完了
 
-- **Checkpoint**: ~/.claude/sessions/$SLUG/checkpoint-$TS.md
 - **Handoff**: ~/.claude/sessions/$SLUG/handoff-$TS.md
 - **MEMORY.md**: Pending Resume マーカーを追記済み
 - **新セッション**: Terminal の新タブで起動中
@@ -198,8 +151,6 @@ osascript -e "tell application \"Terminal\"" \
 
 ### フォールバック
 
-新セッションが自動起動しない場合（macOS 以外の環境、または osascript でエラーが発生した場合）:
-
-1. 新しいターミナルタブ/ウィンドウを手動で開く
-2. `cd $PROJECT_ROOT && claude '/resume'` を実行する
-3. MEMORY.md の Pending Resume マーカーにより、Claude は handoff の存在を自動認識する
+新セッションで `/resume` が自動実行されない場合:
+- MEMORY.md の Pending Resume マーカーにより、新セッションの Claude は handoff の存在を認識可能
+- ユーザーが手動で `/resume` を実行すれば、マーカー経由で引き継ぎが読み込まれる
