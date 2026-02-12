@@ -50,52 +50,11 @@ git log --oneline -10
 
 保存先: `~/.claude/sessions/$SLUG/handoff-$TS.md`
 
-```markdown
-# Handoff: {セッション概要}
-
-- **Project**: {プロジェクト名}
-- **Directory**: {$PROJECT_ROOT}
-- **Timestamp**: {YYYY-MM-DD HH:MM}
-
-## Context
-
-プロジェクトと目的の説明（2-3文）。
-
-## What Was Done
-
-- 完了した作業一覧
-
-## Current State
-
-作業対象の現在の状態。コード変更ありならビルド/テスト/デプロイの可否、なしなら調査・設計等の進捗。
-
-## Open Issues
-
-- 未解決の問題と原因
-
-## Next Steps
-
-1. **[高]** 最優先タスク
-2. **[中]** 次のタスク
-3. **[低]** 余裕があれば
-
-## Key Decisions & Rationale
-
-- **判断内容**: 理由
-
-## Architecture Notes（コード変更ありの場合）/ Background Knowledge（コード変更なしの場合）
-
-コード変更あり: 構造情報、依存関係、設計パターン。なし: 前提知識・調査結果の要約。該当なければ省略可。
-
-## Related Files
-
-次のステップで必ず参照すべきリソース（上位5件）: ソースコード、Obsidian ノート、設定ファイル、参考URLなど。
-
-1. `path/to/file1` — 理由
-2. `path/to/file2` — 理由
-```
+`/handoff` コマンドと同一のテンプレート・適応ルールに従って handoff ファイルを生成する。
 
 > **適応ルール**: git diff/status が空かつソースファイルの編集がない場合は「コード変更なし」と判定。Current State は進捗状況を、Architecture Notes は Background Knowledge に差し替える。
+
+> **機密情報の除外**: API キー、パスワード、トークン、接続文字列、.env ファイルの内容等の機密情報は含めないこと。Related Files / Changed Files に .env, credentials.json 等の機密ファイルを列挙しない。
 
 サイズ目標: 3KB、上限: 6KB
 
@@ -126,6 +85,8 @@ echo "$(pwd | tr '/' '-')"
 > **注意**: このステップは macOS の Terminal.app を前提としています。iTerm2 や他のターミナルを使用している場合は、AppleScript 部分を適宜調整してください。Linux / Windows (WSL) の場合はステップ8のフォールバック手順を参照してください。
 
 `$HANDOFF_PATH` に handoff ファイルのフルパスを設定し、以下を実行:
+
+> `$PROJECT_ROOT` と `$HANDOFF_PATH` にシングルクォート (`'`) が含まれていないことを確認する。含まれている場合は `'` を `'\''` に置換してからコマンドに埋め込むこと。
 
 ```bash
 osascript -e "tell application \"Terminal\"" \

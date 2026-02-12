@@ -62,9 +62,10 @@ ls -t ~/.claude/sessions/$SLUG/checkpoint-*.md 2>/dev/null | head -1
 
 決定したファイルを Read して全内容を取得する。
 
-## 4. Related Files の先行読み込み
+## 4. Related Files の確認
 
-引き継ぎファイルに `## Related Files` セクションがある場合、リストされたファイルの**上位3件**を Read する。ファイルが存在しない場合はスキップする。
+引き継ぎファイルに `## Related Files` セクションがある場合、復元内容の表示にパス一覧を含める。
+ファイルの先行 Read は行わない（必要時に都度 Read する lazy loading 方式）。
 
 ## 5. MEMORY.md マーカーのクリーンアップ
 
@@ -88,8 +89,8 @@ ls -t ~/.claude/sessions/$SLUG/checkpoint-*.md 2>/dev/null | head -1
 ### 今回やるべきこと
 1. {Next Steps から優先度順}
 
-### 読み込んだ関連ファイル
-- {先行 Read したファイル一覧}
+### 関連ファイル（必要時に Read）
+- {Related Files のパス一覧}
 
 ---
 コンテクストが復元されました。作業を続行できます。

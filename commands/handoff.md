@@ -122,6 +122,8 @@ date "+%Y%m%d-%H%M"
 2. `path/to/file2` — 理由
 ```
 
+> **機密情報の除外**: API キー、パスワード、トークン、接続文字列、.env ファイルの内容等の機密情報は含めないこと。Related Files / Changed Files に .env, credentials.json 等の機密ファイルを列挙しない。
+
 ### サイズ制約
 
 - **目標**: 3KB
